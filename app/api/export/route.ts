@@ -209,7 +209,8 @@ export async function POST(request: NextRequest) {
 
     const results = await executeQuery(query, params);
     console.log('=== RESULTADO DA QUERY ===');
-    console.log('Número de registros encontrados:', results.length);
+    const resultsArray = Array.isArray(results) ? results : [];
+    console.log('Número de registros encontrados:', resultsArray.length);
 
     if (!results || !Array.isArray(results) || results.length === 0) {
       console.log('=== NENHUM RESULTADO ENCONTRADO ===');
