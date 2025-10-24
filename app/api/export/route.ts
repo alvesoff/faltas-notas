@@ -86,35 +86,60 @@ export async function POST(request: NextRequest) {
     } else {
       console.log('Construindo query para FALTAS DETALHADAS ou NOTAS');
       // Query para faltas detalhadas e notas
-      query = `
-        SELECT 
-          a.Mat as 'Matrícula',
-          a.Nome as 'Nome do Aluno',
-          c.AnoLetivo as 'Ano Letivo',
-          CASE 
-            WHEN cur.Descricao IS NOT NULL AND cur.Descricao != 'Ens. Fund. 9 anos' 
-            THEN CONCAT(cur.Descricao, ' - ', c.Turma)
-            ELSE CONCAT(c.Serie, 'ª ', c.Turma)
-          END as 'Turma',
-          d.Nome as 'Disciplina',
-          ${tipo === 'notas' ? "nf.Nota as 'Nota'," : ''}
-          nf.Falta as 'Faltas',
-          nf.Bim as 'Bimestre',
-          ${tipo === 'notas' ? `
-          CASE 
-            WHEN nf.Nota < 6 THEN 'Reprovado'
-            WHEN nf.Nota < 7 THEN 'Recuperação'
-            ELSE 'Aprovado'
-          END as 'Status',` : ''}
-          DATE_FORMAT(nf.DtInclusao, '%d/%m/%Y') as 'Data de Inclusão'
-        FROM NotasFaltas nf
-        JOIN Alunos a ON nf.Mat = a.Mat
-        JOIN Turmas t ON nf.Mat = t.Mat AND nf.AnoLetivo = t.AnoLetivo
-        JOIN Classe1 c ON t.idClasse1 = c.idClasse1 AND t.AnoLetivo = c.AnoLetivo
-        LEFT JOIN Cursos cur ON c.idCursos = cur.idCursos
-        JOIN Disciplina1 d ON nf.Disc = d.Codigo AND nf.AnoLetivo = d.AnoLetivo
-        WHERE nf.AnoLetivo = ?
-      `;
+      if (tipo === 'notas') {
+        query = `
+          SELECT 
+            a.Mat as 'Matrícula',
+            a.Nome as 'Nome do Aluno',
+            c.AnoLetivo as 'Ano Letivo',
+            CASE 
+              WHEN cur.Descricao IS NOT NULL AND cur.Descricao != 'Ens. Fund. 9 anos' 
+              THEN CONCAT(cur.Descricao, ' - ', c.Turma)
+              ELSE CONCAT(c.Serie, 'ª ', c.Turma)
+            END as 'Turma',
+            d.Nome as 'Disciplina',
+            nf.Nota as 'Nota',
+            nf.Falta as 'Faltas',
+            nf.Bim as 'Bimestre',
+            CASE 
+              WHEN nf.Nota < 6 THEN 'Reprovado'
+              WHEN nf.Nota < 7 THEN 'Recuperação'
+              ELSE 'Aprovado'
+            END as 'Status',
+            DATE_FORMAT(nf.DtInclusao, '%d/%m/%Y') as 'Data de Inclusão'
+          FROM NotasFaltas nf
+          JOIN Alunos a ON nf.Mat = a.Mat
+          JOIN Turmas t ON nf.Mat = t.Mat AND nf.AnoLetivo = t.AnoLetivo
+          JOIN Classe1 c ON t.idClasse1 = c.idClasse1 AND t.AnoLetivo = c.AnoLetivo
+          LEFT JOIN Cursos cur ON c.idCursos = cur.idCursos
+          JOIN Disciplina1 d ON nf.Disc = d.Codigo AND nf.AnoLetivo = d.AnoLetivo
+          WHERE nf.AnoLetivo = ?
+        `;
+      } else {
+        // Query para faltas detalhadas
+        query = `
+          SELECT 
+            a.Mat as 'Matrícula',
+            a.Nome as 'Nome do Aluno',
+            c.AnoLetivo as 'Ano Letivo',
+            CASE 
+              WHEN cur.Descricao IS NOT NULL AND cur.Descricao != 'Ens. Fund. 9 anos' 
+              THEN CONCAT(cur.Descricao, ' - ', c.Turma)
+              ELSE CONCAT(c.Serie, 'ª ', c.Turma)
+            END as 'Turma',
+            d.Nome as 'Disciplina',
+            nf.Falta as 'Faltas',
+            nf.Bim as 'Bimestre',
+            DATE_FORMAT(nf.DtInclusao, '%d/%m/%Y') as 'Data de Inclusão'
+          FROM NotasFaltas nf
+          JOIN Alunos a ON nf.Mat = a.Mat
+          JOIN Turmas t ON nf.Mat = t.Mat AND nf.AnoLetivo = t.AnoLetivo
+          JOIN Classe1 c ON t.idClasse1 = c.idClasse1 AND t.AnoLetivo = c.AnoLetivo
+          LEFT JOIN Cursos cur ON c.idCursos = cur.idCursos
+          JOIN Disciplina1 d ON nf.Disc = d.Codigo AND nf.AnoLetivo = d.AnoLetivo
+          WHERE nf.AnoLetivo = ?
+        `;
+      }
       sheetName = tipo === 'faltas' ? 'Faltas Detalhadas' : 'Relatório de Notas';
     }
 
