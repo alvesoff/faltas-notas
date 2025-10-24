@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
     const resultsArray = Array.isArray(results) ? results : [];
     console.log('Número de registros encontrados:', resultsArray.length);
 
-    if (!results || !Array.isArray(results) || results.length === 0) {
+    if (!results || !Array.isArray(results) || resultsArray.length === 0) {
       console.log('=== NENHUM RESULTADO ENCONTRADO ===');
       return NextResponse.json(
         { error: 'Nenhum dado encontrado para os filtros selecionados.' },
