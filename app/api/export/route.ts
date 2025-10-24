@@ -18,7 +18,10 @@ export async function OPTIONS(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== INÍCIO DA EXPORTAÇÃO ===');
     const body = await request.json();
+    console.log('Body recebido:', JSON.stringify(body, null, 2));
+    
     const { 
       anoLetivo = '2025', 
       bimestre, 
@@ -30,13 +33,19 @@ export async function POST(request: NextRequest) {
       dataInicio,
       dataFim
     } = body;
+    
+    console.log('Parâmetros processados:', { anoLetivo, bimestre, turma, disciplina, aluno, tipo, tipoFalta, dataInicio, dataFim });
 
     let query = '';
     let params: any[] = [anoLetivo];
     let sheetName = '';
 
+    console.log('=== CONSTRUÇÃO DA QUERY ===');
+    console.log('Tipo:', tipo, 'TipoFalta:', tipoFalta);
+
     // Query para faltas resumidas - USANDO TABELA FREQUENCIA
     if (tipo === 'faltas' && tipoFalta === 'resumidas') {
+      console.log('Construindo query para FALTAS RESUMIDAS');
       query = `
         SELECT 
           a.Mat as 'Matrícula',
@@ -75,6 +84,7 @@ export async function POST(request: NextRequest) {
       `;
       sheetName = 'Faltas Resumidas';
     } else {
+      console.log('Construindo query para FALTAS DETALHADAS ou NOTAS');
       // Query para faltas detalhadas e notas
       query = `
         SELECT 
@@ -167,15 +177,31 @@ export async function POST(request: NextRequest) {
       query += ' ORDER BY a.Nome, d.Nome, nf.Bim';
     }
 
+    console.log('=== QUERY FINAL ===');
+    console.log('Query construída:', query);
+    console.log('Parâmetros:', params);
+    console.log('SheetName:', sheetName);
+
     const results = await executeQuery(query, params);
+    console.log('=== RESULTADO DA QUERY ===');
+    console.log('Número de registros encontrados:', results.length);
 
     if (!results || !Array.isArray(results) || results.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Nenhum dado encontrado para os filtros aplicados'
-      }, { status: 404 });
+      console.log('=== NENHUM RESULTADO ENCONTRADO ===');
+      return NextResponse.json(
+        { error: 'Nenhum dado encontrado para os filtros selecionados.' },
+        { 
+          status: 404,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          }
+        }
+      );
     }
 
+    console.log('=== GERANDO EXCEL ===');
     // Criar workbook do Excel
     const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.json_to_sheet(results);
@@ -255,6 +281,9 @@ export async function POST(request: NextRequest) {
       bookType: 'xlsx', 
       type: 'buffer' 
     });
+    
+    console.log('=== EXCEL GERADO COM SUCESSO ===');
+    console.log('Tamanho do buffer:', excelBuffer.length, 'bytes');
 
     // Gerar nome do arquivo com timestamp
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
@@ -273,7 +302,10 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Erro ao gerar arquivo Excel:', error);
+    console.error('=== ERRO NA EXPORTAÇÃO ===');
+    console.error('Erro completo:', error);
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
+    
     return NextResponse.json({
       success: false,
       error: 'Erro ao gerar arquivo Excel',
