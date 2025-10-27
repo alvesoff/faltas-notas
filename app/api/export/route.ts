@@ -97,12 +97,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Filtros específicos para relatório de grades
-    if (tipo === 'grades') {
-      if (bimestre) {
-        query += ' AND nf.Bim = ?';
-        params.push(bimestre);
-      }
-    }
+    // if (tipo === 'grades') {
+    //   if (bimestre) {
+    //     query += ' AND nf.Bim = ?';
+    //     params.push(bimestre);
+    //   }
+    // }
 
     // Filtros específicos para relatório de faltas detalhadas
     if (tipo === 'faltas' && tipoFalta === 'detalhadas') {
