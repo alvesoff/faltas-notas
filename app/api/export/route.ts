@@ -157,12 +157,6 @@ export async function POST(request: NextRequest) {
       query += ' ORDER BY a.Nome, d.Nome, nf.Bim';
     }
 
-    // Adicionar paginação para notas
-    if (tipo === 'notas') {
-      const offset = (page - 1) * limit;
-      query += ` LIMIT ${limit} OFFSET ${offset}`;
-    }
-
     const results = await executeQuery(query, params);
 
     if (!results || !Array.isArray(results) || results.length === 0) {
