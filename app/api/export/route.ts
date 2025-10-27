@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery } from '@/lib/database';
 import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
 
 export const dynamic = 'force-dynamic';
 
@@ -272,14 +273,22 @@ export async function POST(request: NextRequest) {
 
     // Gerar nome do arquivo com timestamp
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-    const filename = `${sheetName.replace(/\s+/g, '_')}_${timestamp}.xlsx`;
+    const excelFilename = `${sheetName.replace(/\s+/g, '_')}_${timestamp}.xlsx`;
 
-    return new NextResponse(excelBuffer, {
+    // Criar arquivo ZIP contendo o Excel
+    const zip = new JSZip();
+    zip.file(excelFilename, excelBuffer);
+    
+    // Gerar o arquivo ZIP
+    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
+    const zipFilename = `${sheetName.replace(/\s+/g, '_')}_${timestamp}.zip`;
+
+    return new NextResponse(new Uint8Array(zipBuffer), {
       status: 200,
       headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': excelBuffer.length.toString(),
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="${zipFilename}"`,
+        'Content-Length': zipBuffer.length.toString(),
       },
     });
 
