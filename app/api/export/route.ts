@@ -6,31 +6,19 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const { 
-      tipo, 
-      anoLetivo, 
-      bimestre, 
-      turma, 
-      disciplina, 
-      aluno, 
-      tipoFalta, 
-      dataInicio, 
-      dataFim,
-      page = 1,
-      limit = 1000
-    } = await request.json();
-
     const body = await request.json();
     const { 
+      tipo = 'faltas',
       anoLetivo = '2025', 
       bimestre, 
       turma, 
       disciplina, 
       aluno, 
-      tipo = 'faltas',
       tipoFalta = 'detalhadas',
       dataInicio,
-      dataFim
+      dataFim,
+      page = 1,
+      limit = 1000
     } = body;
 
     let query = '';
