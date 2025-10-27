@@ -72,12 +72,12 @@ export async function POST(request: NextRequest) {
         params.push(dataFim);
       }
       
-      if (turma) {
+      if (turma && turma.trim() !== '') {
         query += ' AND c.idClasse1 = ?';
         params.push(turma);
       }
       
-      if (aluno) {
+      if (aluno && aluno.trim() !== '') {
         query += ' AND (a.Nome LIKE ? OR a.Mat = ?)';
         params.push(`%${aluno}%`, aluno);
       }
@@ -111,27 +111,27 @@ export async function POST(request: NextRequest) {
       params = [anoLetivo];
 
       // Filtros de data para faltas detalhadas
-      if (dataInicio) {
+      if (dataInicio && dataInicio.trim() !== '') {
         query += ' AND DATE(nf.DtInclusao) >= ?';
         params.push(dataInicio);
       }
       
-      if (dataFim) {
+      if (dataFim && dataFim.trim() !== '') {
         query += ' AND DATE(nf.DtInclusao) <= ?';
         params.push(dataFim);
       }
 
-      if (turma) {
+      if (turma && turma.trim() !== '') {
         query += ' AND c.idClasse1 = ?';
         params.push(turma);
       }
 
-      if (disciplina) {
+      if (disciplina && disciplina.trim() !== '') {
         query += ' AND nf.Disc = ?';
         params.push(disciplina);
       }
 
-      if (aluno) {
+      if (aluno && aluno.trim() !== '') {
         query += ' AND (a.Nome LIKE ? OR a.Mat = ?)';
         params.push(`%${aluno}%`, aluno);
       }

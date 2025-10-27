@@ -49,33 +49,33 @@ export async function POST(request: NextRequest) {
 
     const params = [anoLetivo];
 
-    // Aplicar filtros adicionais
-    if (bimestre) {
+    // Aplicar filtros adicionais - verificar se não são strings vazias
+    if (bimestre && bimestre.trim() !== '') {
       query += ' AND nf.Bim = ?';
       params.push(bimestre);
     }
 
-    if (turma) {
+    if (turma && turma.trim() !== '') {
       query += ' AND c.idClasse1 = ?';
       params.push(turma);
     }
 
-    if (disciplina) {
+    if (disciplina && disciplina.trim() !== '') {
       query += ' AND d.Codigo = ?';
       params.push(disciplina);
     }
 
-    if (aluno) {
+    if (aluno && aluno.trim() !== '') {
       query += ' AND (a.Nome LIKE ? OR a.Mat = ?)';
       params.push(`%${aluno}%`, aluno);
     }
 
-    if (dataInicio) {
+    if (dataInicio && dataInicio.trim() !== '') {
       query += ' AND DATE(nf.DtInclusao) >= ?';
       params.push(dataInicio);
     }
 
-    if (dataFim) {
+    if (dataFim && dataFim.trim() !== '') {
       query += ' AND DATE(nf.DtInclusao) <= ?';
       params.push(dataFim);
     }
