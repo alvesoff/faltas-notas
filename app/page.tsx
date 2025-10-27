@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Filtros from '@/components/Filtros';
-import TabelaRelatorios from '@/components/TabelaRelatorios';
+import FiltrosFaltas from '@/components/FiltrosFaltas';
+import FiltrosNotas from '@/components/FiltrosNotas';
+import TabelaFaltas from '@/components/TabelaFaltas';
+import TabelaNotas from '@/components/TabelaNotas';
 import { BookOpen, Users, AlertCircle } from 'lucide-react';
 
 interface DadosRelatorio {
@@ -23,6 +25,7 @@ interface DadosRelatorio {
 export default function Home() {
   const [dados, setDados] = useState<DadosRelatorio[]>([]);
   const [carregando, setCarregando] = useState(false);
+  const [tipoRelatorio, setTipoRelatorio] = useState<'faltas' | 'notas'>('faltas');
   
   // Função para obter data padrão (7 dias atrás)
   const getDataPadrao = () => {
@@ -55,7 +58,6 @@ export default function Home() {
     disciplina: '',
     aluno: '',
     tipo: 'faltas',
-    tipoFalta: 'resumidas',
     dataInicio: getDataPadrao(),
     dataFim: getDataAtual()
   });
@@ -70,6 +72,11 @@ export default function Home() {
     buscarDados();
   }, [filtros]);
 
+  const handleFiltroChange = (novosFiltros: any) => {
+    setFiltros(novosFiltros);
+    setTipoRelatorio(novosFiltros.tipo);
+  };
+
   const buscarDados = async () => {
     setCarregando(true);
     try {
@@ -78,7 +85,8 @@ export default function Home() {
         if (value) params.append(key, value);
       });
 
-      const response = await fetch(`/api/relatorios?${params.toString()}`);
+      const endpoint = filtros.tipo === 'notas' ? '/funcoes/relatorio-notas' : '/funcoes/relatorio-faltas';
+      const response = await fetch(`${endpoint}?${params.toString()}`);
       const result = await response.json();
 
       if (result.success) {
@@ -129,9 +137,9 @@ export default function Home() {
       // Determinar a rota baseada no tipo de relatório
       let endpoint = '';
       if (filtros.tipo === 'notas') {
-        endpoint = '/api/export/notas';
+        endpoint = '/funcoes/export/notas';
       } else if (filtros.tipo === 'faltas') {
-        endpoint = '/api/export/faltas';
+        endpoint = '/funcoes/export/faltas';
       } else {
         throw new Error('Tipo de relatório não suportado');
       }
@@ -206,20 +214,62 @@ export default function Home() {
 
   return (
     <div className="space-y-6">
-      {/* Componente de Filtros */}
-      <Filtros 
-        onFiltroChange={setFiltros}
-        onExportar={handleExportar}
-        carregando={carregando}
-      />
+      {/* Seletor de Tipo de Relatório */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex items-center gap-4">
+          <h2 className="text-lg font-semibold text-gray-800">Tipo de Relatório</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setTipoRelatorio('faltas')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                tipoRelatorio === 'faltas'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Faltas
+            </button>
+            <button
+              onClick={() => setTipoRelatorio('notas')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                tipoRelatorio === 'notas'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Notas
+            </button>
+          </div>
+        </div>
+      </div>
 
-      {/* Tabela de Relatórios */}
-      <TabelaRelatorios 
-        dados={dados}
-        carregando={carregando}
-        tipo={filtros.tipo as 'faltas' | 'notas'}
-        tipoFalta={filtros.tipoFalta as 'detalhadas' | 'resumidas'}
-      />
+      {/* Componentes de Filtros baseados no tipo */}
+      {tipoRelatorio === 'faltas' ? (
+        <FiltrosFaltas 
+          onFiltroChange={handleFiltroChange}
+          onExportar={handleExportar}
+          carregando={carregando}
+        />
+      ) : (
+        <FiltrosNotas 
+          onFiltroChange={handleFiltroChange}
+          onExportar={handleExportar}
+          carregando={carregando}
+        />
+      )}
+
+      {/* Componentes de Tabela baseados no tipo */}
+      {tipoRelatorio === 'faltas' ? (
+        <TabelaFaltas 
+          dados={dados}
+          carregando={carregando}
+        />
+      ) : (
+        <TabelaNotas 
+          dados={dados}
+          carregando={carregando}
+        />
+      )}
     </div>
   );
 }
