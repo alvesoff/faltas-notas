@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { anoLetivo, aluno } = body;
+    const { anoLetivo, aluno, bimestre, turma, disciplina, dataInicio, dataFim } = body;
 
     if (!anoLetivo) {
       return NextResponse.json({
@@ -17,12 +17,17 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Query atualizada para notas incluindo Disciplina
+    // Query atualizada para notas incluindo Disciplina e todos os filtros
     let query = `
       SELECT 
         nf.Mat as Matricula,
         a.Nome as Aluno,
         nf.AnoLetivo as 'Ano Letivo',
+        CASE 
+          WHEN cur.Descricao IS NOT NULL AND cur.Descricao != 'Ens. Fund. 9 anos' 
+          THEN CONCAT(cur.Descricao, ' - ', c.Turma)
+          ELSE CONCAT(c.Serie, 'ª ', c.Turma)
+        END as Turma,
         d.Nome as Disciplina,
         nf.Nota as Nota,
         nf.Falta as Faltas,
@@ -35,15 +40,44 @@ export async function POST(request: NextRequest) {
         DATE_FORMAT(nf.DtInclusao, '%d/%m/%Y') as 'Data de Inclusão'
       FROM NotasFaltas nf
       JOIN Alunos a ON nf.Mat = a.Mat
+      JOIN Turmas t ON nf.Mat = t.Mat AND nf.AnoLetivo = t.AnoLetivo
+      JOIN Classe1 c ON t.idClasse1 = c.idClasse1 AND t.AnoLetivo = c.AnoLetivo
+      LEFT JOIN Cursos cur ON c.idCursos = cur.idCursos
       JOIN Disciplina1 d ON nf.Disc = d.Codigo AND nf.AnoLetivo = d.AnoLetivo
       WHERE nf.AnoLetivo = ?
     `;
 
     const params = [anoLetivo];
 
+    // Aplicar filtros adicionais
+    if (bimestre) {
+      query += ' AND nf.Bim = ?';
+      params.push(bimestre);
+    }
+
+    if (turma) {
+      query += ' AND c.idClasse1 = ?';
+      params.push(turma);
+    }
+
+    if (disciplina) {
+      query += ' AND d.Codigo = ?';
+      params.push(disciplina);
+    }
+
     if (aluno) {
       query += ' AND (a.Nome LIKE ? OR a.Mat = ?)';
       params.push(`%${aluno}%`, aluno);
+    }
+
+    if (dataInicio) {
+      query += ' AND DATE(nf.DtInclusao) >= ?';
+      params.push(dataInicio);
+    }
+
+    if (dataFim) {
+      query += ' AND DATE(nf.DtInclusao) <= ?';
+      params.push(dataFim);
     }
 
     query += ' ORDER BY a.Nome, nf.Bim';
