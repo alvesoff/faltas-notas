@@ -23,14 +23,41 @@ interface DadosRelatorio {
 export default function Home() {
   const [dados, setDados] = useState<DadosRelatorio[]>([]);
   const [carregando, setCarregando] = useState(false);
+  
+  // Função para obter data padrão (7 dias atrás)
+  const getDataPadrao = () => {
+    const hoje = new Date();
+    const seteDiasAtras = new Date(hoje);
+    seteDiasAtras.setDate(hoje.getDate() - 7);
+    
+    const ano = seteDiasAtras.getFullYear();
+    const mes = String(seteDiasAtras.getMonth() + 1).padStart(2, '0');
+    const dia = String(seteDiasAtras.getDate()).padStart(2, '0');
+    
+    return `${ano}-${mes}-${dia}`;
+  };
+
+  // Função para obter data atual
+  const getDataAtual = () => {
+    const hoje = new Date();
+    
+    const ano = hoje.getFullYear();
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoje.getDate()).padStart(2, '0');
+    
+    return `${ano}-${mes}-${dia}`;
+  };
+
   const [filtros, setFiltros] = useState({
-    anoLetivo: '2025',
+    anoLetivo: new Date().getFullYear().toString(),
     bimestre: '',
     turma: '',
     disciplina: '',
     aluno: '',
     tipo: 'faltas',
-    tipoFalta: 'detalhadas'
+    tipoFalta: 'resumidas',
+    dataInicio: getDataPadrao(),
+    dataFim: getDataAtual()
   });
   const [estatisticas, setEstatisticas] = useState({
     totalAlunos: 0,

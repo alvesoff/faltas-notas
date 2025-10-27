@@ -44,13 +44,13 @@ export default function Filtros({ onFiltroChange, onExportar, carregando }: Filt
   };
 
   const [filtros, setFiltros] = useState({
-    anoLetivo: '2025',
+    anoLetivo: new Date().getFullYear().toString(),
     bimestre: '',
     turma: '',
     disciplina: '',
     aluno: '',
     tipo: 'faltas',
-    tipoFalta: 'detalhadas', // novo campo para tipo de falta
+    tipoFalta: 'resumidas', // padrão para faltas resumidas
     dataInicio: getDataPadrao(),
     dataFim: getDataAtual()
   });

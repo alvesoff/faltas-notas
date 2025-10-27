@@ -17,12 +17,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Query MUITO simplificada para notas - apenas NotasFaltas e Alunos
+    // Query atualizada para notas incluindo Disciplina
     let query = `
       SELECT 
         nf.Mat as Matricula,
         a.Nome as Aluno,
         nf.AnoLetivo as 'Ano Letivo',
+        d.Nome as Disciplina,
         nf.Nota as Nota,
         nf.Falta as Faltas,
         nf.Bim as Bimestre,
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
         DATE_FORMAT(nf.DtInclusao, '%d/%m/%Y') as 'Data de Inclusão'
       FROM NotasFaltas nf
       JOIN Alunos a ON nf.Mat = a.Mat
+      JOIN Disciplina1 d ON nf.Disc = d.Codigo AND nf.AnoLetivo = d.AnoLetivo
       WHERE nf.AnoLetivo = ?
     `;
 
