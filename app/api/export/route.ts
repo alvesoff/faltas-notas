@@ -6,6 +6,20 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    const { 
+      tipo, 
+      anoLetivo, 
+      bimestre, 
+      turma, 
+      disciplina, 
+      aluno, 
+      tipoFalta, 
+      dataInicio, 
+      dataFim,
+      page = 1,
+      limit = 1000
+    } = await request.json();
+
     const body = await request.json();
     const { 
       anoLetivo = '2025', 
@@ -153,6 +167,12 @@ export async function POST(request: NextRequest) {
       query += ' GROUP BY a.Mat, a.Nome, c.Serie, c.Turma, cur.Descricao ORDER BY a.Nome';
     } else {
       query += ' ORDER BY a.Nome, d.Nome, nf.Bim';
+    }
+
+    // Adicionar paginação para notas
+    if (tipo === 'notas') {
+      const offset = (page - 1) * limit;
+      query += ` LIMIT ${limit} OFFSET ${offset}`;
     }
 
     const results = await executeQuery(query, params);
