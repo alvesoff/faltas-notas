@@ -24,7 +24,11 @@ export async function POST(request: NextRequest) {
     let sheetName = '';
 
     // Query para faltas resumidas - USANDO TABELA FREQUENCIA
-    if (tipo === 'faltas' && tipoFalta === 'resumidas') {
+    // TESTE DEFINITIVO: Forçar caminho de faltas quando receber grades
+    const tipoTeste = tipo === 'grades' ? 'faltas' : tipo;
+    const tipoFaltaTeste = tipoTeste === 'faltas' ? 'detalhadas' : tipoFalta;
+
+    if (tipoTeste === 'faltas' && tipoFaltaTeste === 'resumidas') {
       query = `
         SELECT 
           a.Mat as 'Matrícula',
@@ -93,7 +97,7 @@ export async function POST(request: NextRequest) {
         JOIN Disciplina1 d ON nf.Disc = d.Codigo AND nf.AnoLetivo = d.AnoLetivo
         WHERE nf.AnoLetivo = ?
       `;
-      sheetName = tipo === 'faltas' ? 'Faltas Detalhadas' : 'Relatório de Grades';
+      sheetName = tipoTeste === 'faltas' ? 'Faltas Detalhadas' : 'Relatório de Grades';
     }
 
     // Filtros específicos para relatório de grades
@@ -105,7 +109,7 @@ export async function POST(request: NextRequest) {
     // }
 
     // Filtros específicos para relatório de faltas detalhadas
-    if (tipo === 'faltas' && tipoFalta === 'detalhadas') {
+    if (tipoTeste === 'faltas' && tipoFaltaTeste === 'detalhadas') {
       query += ' AND nf.Falta > 0';
       
       // Filtros de data para faltas
