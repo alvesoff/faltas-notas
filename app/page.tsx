@@ -99,7 +99,17 @@ export default function Home() {
   const handleExportar = async () => {
     setCarregando(true);
     try {
-      const response = await fetch('/api/export', {
+      // Determinar a rota baseada no tipo de relatório
+      let endpoint = '';
+      if (filtros.tipo === 'notas') {
+        endpoint = '/api/export/notas';
+      } else if (filtros.tipo === 'faltas') {
+        endpoint = '/api/export/faltas';
+      } else {
+        throw new Error('Tipo de relatório não suportado');
+      }
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -114,8 +124,10 @@ export default function Home() {
         a.style.display = 'none';
         a.href = url;
         
-        const timestamp = new Date().toISOString().split('T')[0];
-        const filename = `relatorio_${filtros.tipo}_${filtros.anoLetivo}_${timestamp}.xlsx`;
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const filename = filtros.tipo === 'notas' 
+          ? `Relatorio_Notas_${filtros.anoLetivo}_${timestamp}.xlsx`
+          : `Relatorio_Faltas_${filtros.anoLetivo}_${timestamp}.xlsx`;
         a.download = filename;
         
         document.body.appendChild(a);
