@@ -24,11 +24,10 @@ export async function POST(request: NextRequest) {
     let sheetName = '';
 
     // Query para faltas resumidas - USANDO TABELA FREQUENCIA
-    // TESTE DEFINITIVO: Forçar caminho de faltas quando receber grades
-    const tipoTeste = tipo === 'grades' ? 'faltas' : tipo;
-    const tipoFaltaTeste = tipoTeste === 'faltas' ? 'detalhadas' : tipoFalta;
+    // Mudando de volta para 'notas' agora que temos a query simplificada
+    const tipoFinal = tipo === 'grades' ? 'notas' : tipo;
 
-    if (tipoTeste === 'faltas' && tipoFaltaTeste === 'resumidas') {
+    if (tipo === 'faltas' && tipoFalta === 'resumidas') {
       query = `
         SELECT 
           a.Mat as 'Matrícula',
@@ -66,6 +65,27 @@ export async function POST(request: NextRequest) {
              f.aula6 = 'A' OR f.aula7 = 'A' OR f.aula8 = 'A' OR f.aula9 = 'A' OR f.aula10 = 'A')
       `;
       sheetName = 'Faltas Resumidas';
+    } else if (tipoFinal === 'notas') {
+      // Query SIMPLIFICADA para notas - SEM JOINs complexos que causam 405
+      query = `
+        SELECT 
+          nf.Mat as 'Matrícula',
+          a.Nome as 'Nome do Aluno',
+          nf.AnoLetivo as 'Ano Letivo',
+          nf.Nota as 'Nota',
+          nf.Falta as 'Faltas',
+          nf.Bim as 'Bimestre',
+          CASE 
+            WHEN nf.Nota < 6 THEN 'Reprovado'
+            WHEN nf.Nota < 7 THEN 'Recuperação'
+            ELSE 'Aprovado'
+          END as 'Status',
+          DATE_FORMAT(nf.DtInclusao, '%d/%m/%Y') as 'Data de Inclusão'
+        FROM NotasFaltas nf
+        JOIN Alunos a ON nf.Mat = a.Mat
+        WHERE nf.AnoLetivo = ?
+      `;
+      sheetName = 'Relatório de Notas';
     } else {
       // Query para faltas detalhadas e notas
       query = `
@@ -97,19 +117,19 @@ export async function POST(request: NextRequest) {
         JOIN Disciplina1 d ON nf.Disc = d.Codigo AND nf.AnoLetivo = d.AnoLetivo
         WHERE nf.AnoLetivo = ?
       `;
-      sheetName = tipoTeste === 'faltas' ? 'Faltas Detalhadas' : 'Relatório de Grades';
+      sheetName = tipo === 'faltas' ? 'Faltas Detalhadas' : 'Relatório de Notas';
     }
 
-    // Filtros específicos para relatório de grades
-    // if (tipo === 'grades') {
-    //   if (bimestre) {
-    //     query += ' AND nf.Bim = ?';
-    //     params.push(bimestre);
-    //   }
-    // }
+    // Filtros específicos para relatório de notas
+    if (tipoFinal === 'notas') {
+      if (bimestre) {
+        query += ' AND nf.Bim = ?';
+        params.push(bimestre);
+      }
+    }
 
     // Filtros específicos para relatório de faltas detalhadas
-    if (tipoTeste === 'faltas' && tipoFaltaTeste === 'detalhadas') {
+    if (tipo === 'faltas' && tipoFalta === 'detalhadas') {
       query += ' AND nf.Falta > 0';
       
       // Filtros de data para faltas
