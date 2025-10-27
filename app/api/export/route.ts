@@ -17,8 +17,6 @@ export async function POST(request: NextRequest) {
       tipoFalta = 'detalhadas',
       dataInicio,
       dataFim,
-      page = 1,
-      limit = 1000
     } = body;
 
     let query = '';
@@ -77,10 +75,10 @@ export async function POST(request: NextRequest) {
             ELSE CONCAT(c.Serie, 'ª ', c.Turma)
           END as 'Turma',
           d.Nome as 'Disciplina',
-          ${tipo === 'notas' ? "nf.Nota as 'Nota'," : ''}
+          ${tipo === 'grades' ? "nf.Nota as 'Nota'," : ''}
           nf.Falta as 'Faltas',
           nf.Bim as 'Bimestre',
-          ${tipo === 'notas' ? `
+          ${tipo === 'grades' ? `
           CASE 
             WHEN nf.Nota < 6 THEN 'Reprovado'
             WHEN nf.Nota < 7 THEN 'Recuperação'
@@ -95,11 +93,11 @@ export async function POST(request: NextRequest) {
         JOIN Disciplina1 d ON nf.Disc = d.Codigo AND nf.AnoLetivo = d.AnoLetivo
         WHERE nf.AnoLetivo = ?
       `;
-      sheetName = tipo === 'faltas' ? 'Faltas Detalhadas' : 'Relatório de Notas';
+      sheetName = tipo === 'faltas' ? 'Faltas Detalhadas' : 'Relatório de Grades';
     }
 
-    // Filtros específicos para relatório de notas
-    if (tipo === 'notas') {
+    // Filtros específicos para relatório de grades
+    if (tipo === 'grades') {
       if (bimestre) {
         query += ' AND nf.Bim = ?';
         params.push(bimestre);
