@@ -175,6 +175,8 @@ export async function POST(request: NextRequest) {
     // Ordenação e agrupamento
     if (tipo === 'faltas' && tipoFalta === 'resumidas') {
       query += ' GROUP BY a.Mat, a.Nome, c.Serie, c.Turma, cur.Descricao ORDER BY a.Nome';
+    } else if (tipoFinal === 'notas') {
+      query += ' ORDER BY a.Nome, nf.Bim';
     } else {
       query += ' ORDER BY a.Nome, d.Nome, nf.Bim';
     }
